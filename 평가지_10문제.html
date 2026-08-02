@@ -1,0 +1,268 @@
+<title>케미컬 퀘스트 · 화학 반응식 평가지</title>
+<style>
+  :root{
+    --paper:#faf8f2; --ink:#17213f; --slate:#5b6478; --gold:#b0842a; --gold-soft:#d9b45a;
+    --line:#ddd6c6; --card:#ffffff; --card-line:#e6e0d1; --box-line:#98a0b4;
+    --good:#2f7d5b; --shade:#f3efe4;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --paper:#14161d; --ink:#e9e7df; --slate:#a4acbf; --gold:#d7ad55; --gold-soft:#8a6f2e;
+      --line:#2c3040; --card:#1b1e27; --card-line:#2c3040; --box-line:#5a6480; --good:#6fd3a2; --shade:#1f2330; }
+  }
+  :root[data-theme="light"]{ --paper:#faf8f2; --ink:#17213f; --slate:#5b6478; --gold:#b0842a; --gold-soft:#d9b45a;
+    --line:#ddd6c6; --card:#ffffff; --card-line:#e6e0d1; --box-line:#98a0b4; --good:#2f7d5b; --shade:#f3efe4; }
+  :root[data-theme="dark"]{ --paper:#14161d; --ink:#e9e7df; --slate:#a4acbf; --gold:#d7ad55; --gold-soft:#8a6f2e;
+    --line:#2c3040; --card:#1b1e27; --card-line:#2c3040; --box-line:#5a6480; --good:#6fd3a2; --shade:#1f2330; }
+
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .sheet{ max-width:760px; margin:0 auto; padding:34px 30px 60px; }
+
+  /* ── 헤더 ── */
+  .head{ border:2px solid var(--ink); border-radius:12px; overflow:hidden; }
+  .head .band{ background:var(--ink); color:var(--paper); padding:14px 20px 15px;
+    display:flex; align-items:baseline; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .brand{ font-size:12px; letter-spacing:3px; color:var(--gold-soft); font-weight:700; text-transform:uppercase; }
+  .title{ font-size:23px; font-weight:800; letter-spacing:-.3px; margin:2px 0 0; text-wrap:balance; }
+  .subtitle{ font-size:13px; color:#c7cbd6; margin-top:3px; }
+  .prepost{ display:flex; gap:8px; font-size:12.5px; }
+  .prepost span{ border:1px solid var(--gold-soft); color:var(--gold-soft); border-radius:20px;
+    padding:3px 12px; white-space:nowrap; }
+  .fields{ display:grid; grid-template-columns:1.4fr 1fr 1fr .9fr; gap:0; }
+  .fields .f{ padding:9px 14px; border-right:1px solid var(--line); font-size:13px; color:var(--slate); }
+  .fields .f:last-child{ border-right:none; }
+  .fields .f b{ color:var(--ink); font-weight:700; margin-right:6px; }
+  .fields .line{ display:inline-block; min-width:40px; border-bottom:1px solid var(--box-line); }
+  .fields .score b{ color:var(--gold); }
+
+  .note{ font-size:12.5px; color:var(--slate); margin:12px 2px 0; line-height:1.55; }
+
+  /* ── 섹션 ── */
+  .sec{ margin-top:26px; }
+  .sec-h{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .sec-tag{ font-size:11px; letter-spacing:2px; font-weight:800; color:var(--paper);
+    background:var(--gold); padding:3px 9px; border-radius:5px; }
+  .sec-t{ font-size:17px; font-weight:800; }
+  .sec-d{ font-size:12.5px; color:var(--slate); margin:2px 2px 12px; }
+  .rule{ height:2px; background:linear-gradient(90deg,var(--gold),transparent); border:none; margin:0 0 14px; }
+
+  /* ── Part A: 계수 문제 ── */
+  .probs{ list-style:none; margin:0; padding:0; display:grid; gap:9px; }
+  .prob{ display:flex; align-items:center; gap:12px; background:var(--card);
+    border:1px solid var(--card-line); border-radius:9px; padding:11px 14px; }
+  .pnum{ flex:none; width:26px; height:26px; border-radius:50%; background:var(--shade); color:var(--gold);
+    font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--card-line); }
+  .eq{ font-family:"Cambria Math","Consolas",ui-monospace,monospace; font-size:19px; letter-spacing:.3px;
+    display:flex; align-items:center; flex-wrap:wrap; gap:5px 4px; }
+  .eq sub{ font-size:.62em; }
+  .cb{ display:inline-block; width:24px; height:26px; border:1.6px solid var(--box-line); border-radius:4px;
+    margin-right:2px; vertical-align:-6px; background:var(--paper); }
+  .op{ color:var(--slate); margin:0 3px; font-weight:600; }
+  .arr{ color:var(--gold); margin:0 7px; font-weight:700; }
+  .tagline{ font-size:11px; color:var(--slate); margin-left:auto; white-space:nowrap;
+    font-family:inherit; letter-spacing:0; }
+
+  /* ── Part B: 개념 문제 ── */
+  .qs{ list-style:none; margin:0; padding:0; display:grid; gap:13px; }
+  .q{ background:var(--card); border:1px solid var(--card-line); border-radius:9px; padding:12px 15px; }
+  .q .qt{ display:flex; gap:9px; font-size:14.5px; font-weight:600; }
+  .q .qt .pnum{ margin-top:1px; }
+  .opts{ display:grid; grid-template-columns:1fr 1fr; gap:4px 18px; margin:9px 0 0 36px; font-size:13.5px;
+    color:var(--ink); }
+  .opts .o{ color:var(--slate); }
+  .opts .o b{ color:var(--ink); font-weight:700; margin-right:5px; }
+  .short{ margin:8px 0 0 36px; font-size:13px; color:var(--slate); }
+  .short .line{ display:inline-block; min-width:180px; border-bottom:1px solid var(--box-line); height:1.2em; vertical-align:-3px; }
+
+  /* ── 교사용(정답/채점) ── */
+  .teacher{ margin-top:30px; border:1.5px dashed var(--gold); border-radius:12px; padding:18px 20px; background:var(--shade); }
+  .teacher .cut{ font-size:11px; letter-spacing:2px; color:var(--gold); font-weight:800; text-transform:uppercase; }
+  .teacher h3{ font-size:16px; margin:6px 0 10px; }
+  .keygrid{ display:grid; grid-template-columns:1fr 1fr; gap:6px 26px; font-size:13px; }
+  .keygrid .k{ display:flex; gap:8px; }
+  .keygrid .k .n{ color:var(--gold); font-weight:800; min-width:20px; }
+  .keygrid .k .a{ font-family:"Cambria Math",ui-monospace,monospace; }
+  .keygrid .k .a sub{ font-size:.62em; }
+  .subkey{ font-size:12px; color:var(--slate); margin:3px 0 0; }
+  .stat{ margin-top:14px; font-size:12.5px; color:var(--slate); line-height:1.7; }
+  .stat b{ color:var(--ink); }
+  .stat table{ border-collapse:collapse; margin-top:8px; width:100%; font-size:12.5px; }
+  .stat th,.stat td{ border:1px solid var(--card-line); padding:5px 8px; text-align:center; }
+  .stat th{ background:var(--ink); color:var(--paper); font-weight:700; }
+  .foot{ text-align:center; font-size:11px; color:var(--slate); margin-top:26px; letter-spacing:.3px; }
+
+  @media (max-width:560px){
+    .fields{ grid-template-columns:1fr 1fr; } .fields .f:nth-child(2){ border-right:none; }
+    .opts{ grid-template-columns:1fr; } .tagline{ display:none; }
+  }
+  @media print{
+    :root{ --paper:#fff; --card:#fff; --shade:#f6f3ec; }
+    body{ background:#fff; } .sheet{ padding:0; max-width:100%; }
+    .teacher{ page-break-before:always; }
+    .prob,.q{ break-inside:avoid; }
+  }
+</style>
+
+<div class="sheet">
+
+  <header class="head">
+    <div class="band">
+      <div>
+        <div class="brand">케미컬 퀘스트 · 수브레인 알케미스트</div>
+        <h1 class="title">화학 반응식 · 개념 평가지</h1>
+        <div class="subtitle">중2 화학 · 게임 학습 전/후 성취도 측정용 (총 20문항 · 20점)</div>
+      </div>
+      <div class="prepost"><span>□ 사전(PRE)</span><span>□ 사후(POST)</span></div>
+    </div>
+    <div class="fields">
+      <div class="f"><b>이름</b><span class="line"></span></div>
+      <div class="f"><b>학교/반</b><span class="line"></span></div>
+      <div class="f"><b>날짜</b><span class="line"></span></div>
+      <div class="f score"><b>점수</b><span class="line"></span> / 20</div>
+    </div>
+  </header>
+
+  <p class="note">각 □ 안에 알맞은 <b>계수</b>를 쓰세요. 계수가 1일 때도 <b>1</b>이라고 씁니다.
+    반응 전과 후의 <b>원자 종류와 개수가 같아야</b> 합니다(질량 보존).</p>
+
+  <!-- ===================== PART A ===================== -->
+  <section class="sec">
+    <div class="sec-h"><span class="sec-tag">PART A</span><span class="sec-t">화학 반응식 계수 맞히기</span></div>
+    <div class="sec-d">양쪽 원자 수가 같아지도록 계수를 채우세요. (각 1점 · 10점)</div>
+    <hr class="rule">
+    <ol class="probs">
+      <li class="prob"><span class="pnum">1</span><span class="eq">
+        <span class="cb"></span>H<sub>2</sub><span class="op">+</span><span class="cb"></span>O<sub>2</sub><span class="arr">→</span><span class="cb"></span>H<sub>2</sub>O</span>
+        <span class="tagline">물 생성</span></li>
+
+      <li class="prob"><span class="pnum">2</span><span class="eq">
+        <span class="cb"></span>C<span class="op">+</span><span class="cb"></span>O<sub>2</sub><span class="arr">→</span><span class="cb"></span>CO<sub>2</sub></span>
+        <span class="tagline">탄소 완전연소</span></li>
+
+      <li class="prob"><span class="pnum">3</span><span class="eq">
+        <span class="cb"></span>Mg<span class="op">+</span><span class="cb"></span>O<sub>2</sub><span class="arr">→</span><span class="cb"></span>MgO</span>
+        <span class="tagline">마그네슘 연소</span></li>
+
+      <li class="prob"><span class="pnum">4</span><span class="eq">
+        <span class="cb"></span>CO<span class="op">+</span><span class="cb"></span>O<sub>2</sub><span class="arr">→</span><span class="cb"></span>CO<sub>2</sub></span>
+        <span class="tagline">일산화탄소 연소</span></li>
+
+      <li class="prob"><span class="pnum">5</span><span class="eq">
+        <span class="cb"></span>N<sub>2</sub><span class="op">+</span><span class="cb"></span>H<sub>2</sub><span class="arr">→</span><span class="cb"></span>NH<sub>3</sub></span>
+        <span class="tagline">암모니아 합성</span></li>
+
+      <li class="prob"><span class="pnum">6</span><span class="eq">
+        <span class="cb"></span>CH<sub>4</sub><span class="op">+</span><span class="cb"></span>O<sub>2</sub><span class="arr">→</span><span class="cb"></span>CO<sub>2</sub><span class="op">+</span><span class="cb"></span>H<sub>2</sub>O</span>
+        <span class="tagline">메테인 연소</span></li>
+
+      <li class="prob"><span class="pnum">7</span><span class="eq">
+        <span class="cb"></span>Na<span class="op">+</span><span class="cb"></span>H<sub>2</sub>O<span class="arr">→</span><span class="cb"></span>NaOH<span class="op">+</span><span class="cb"></span>H<sub>2</sub></span>
+        <span class="tagline">나트륨 + 물</span></li>
+
+      <li class="prob"><span class="pnum">8</span><span class="eq">
+        <span class="cb"></span>Fe<span class="op">+</span><span class="cb"></span>O<sub>2</sub><span class="arr">→</span><span class="cb"></span>Fe<sub>2</sub>O<sub>3</sub></span>
+        <span class="tagline">철의 산화(녹)</span></li>
+
+      <li class="prob"><span class="pnum">9</span><span class="eq">
+        <span class="cb"></span>H<sub>2</sub>O<sub>2</sub><span class="arr">→</span><span class="cb"></span>H<sub>2</sub>O<span class="op">+</span><span class="cb"></span>O<sub>2</sub></span>
+        <span class="tagline">과산화수소 분해</span></li>
+
+      <li class="prob"><span class="pnum">10</span><span class="eq">
+        <span class="cb"></span>HCl<span class="op">+</span><span class="cb"></span>NaOH<span class="arr">→</span><span class="cb"></span>NaCl<span class="op">+</span><span class="cb"></span>H<sub>2</sub>O</span>
+        <span class="tagline">중화 반응</span></li>
+    </ol>
+  </section>
+
+  <!-- ===================== PART B ===================== -->
+  <section class="sec">
+    <div class="sec-h"><span class="sec-tag">PART B</span><span class="sec-t">화학 개념 (게임 속 화학)</span></div>
+    <div class="sec-d">알맞은 답의 기호를 고르거나 빈칸을 채우세요. (각 1점 · 10점)</div>
+    <hr class="rule">
+    <ol class="qs">
+      <li class="q"><div class="qt"><span class="pnum">1</span><span>화학 반응식 앞의 <b>계수</b>가 나타내는 것은?</span></div>
+        <div class="opts"><div class="o"><b>①</b> 원자의 무게</div><div class="o"><b>②</b> 반응하는 분자 수의 비</div>
+          <div class="o"><b>③</b> 온도의 높낮이</div><div class="o"><b>④</b> 원소의 종류</div></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">2</span><span>화학 반응 전과 후에 <b>변하지 않는</b> 것을 모두 고르면? (질량 보존)</span></div>
+        <div class="opts"><div class="o"><b>①</b> 원자의 종류</div><div class="o"><b>②</b> 원자의 총개수</div>
+          <div class="o"><b>③</b> 물질의 색</div><div class="o"><b>④</b> 전체 질량</div></div>
+        <div class="short">→ 답: <span class="line"></span></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">3</span><span>마그네슘(Mg)이 탈 때 나는 불빛의 색은?</span></div>
+        <div class="opts"><div class="o"><b>①</b> 붉은색</div><div class="o"><b>②</b> 눈부신 흰색</div>
+          <div class="o"><b>③</b> 푸른색</div><div class="o"><b>④</b> 노란색</div></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">4</span><span>탄소가 <b>산소가 부족한</b> 상태로 탈 때(불완전연소) 주로 생기는 기체는?</span></div>
+        <div class="opts"><div class="o"><b>①</b> CO<sub>2</sub> (이산화탄소)</div><div class="o"><b>②</b> CO (일산화탄소)</div>
+          <div class="o"><b>③</b> H<sub>2</sub> (수소)</div><div class="o"><b>④</b> O<sub>2</sub> (산소)</div></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">5</span><span>산(HCl)과 염기(NaOH)가 만나 물과 염(소금)이 되는 반응의 이름은?</span></div>
+        <div class="short">→ <span class="line"></span> 반응</div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">6</span><span><b>산성</b> 용액의 pH 값의 범위는?</span></div>
+        <div class="opts"><div class="o"><b>①</b> 7보다 작다</div><div class="o"><b>②</b> 정확히 7</div>
+          <div class="o"><b>③</b> 7보다 크다</div><div class="o"><b>④</b> 14보다 크다</div></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">7</span><span>두 용액을 섞을 때 물에 <b>녹지 않아 가라앉는</b> 고체 생성물을 무엇이라 하는가? (예: AgCl↓)</span></div>
+        <div class="short">→ <span class="line"></span></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">8</span><span>소금물에서 순수한 <b>물만</b> 얻으려면? (끓는점 차이 이용)</span></div>
+        <div class="opts"><div class="o"><b>①</b> 거름(여과)</div><div class="o"><b>②</b> 증류</div>
+          <div class="o"><b>③</b> 자석 사용</div><div class="o"><b>④</b> 크로마토그래피</div></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">9</span><span>철가루와 모래가 섞인 것을 분리하는 가장 좋은 방법은? (자성 이용)</span></div>
+        <div class="opts"><div class="o"><b>①</b> 증류</div><div class="o"><b>②</b> 재결정</div>
+          <div class="o"><b>③</b> 자석</div><div class="o"><b>④</b> 거름</div></div></li>
+
+      <li class="q"><div class="qt"><span class="pnum">10</span><span>금속(Na, Mg 등)을 물이나 산에 넣을 때 발생하는 기체는?</span></div>
+        <div class="short">→ <span class="line"></span> ( 기호: <span class="line" style="min-width:70px"></span> )</div></li>
+    </ol>
+  </section>
+
+  <!-- ===================== 교사용 ===================== -->
+  <section class="teacher">
+    <div class="cut">✂ 교사용 · 정답 및 채점 (배부 시 제거)</div>
+    <h3>정답</h3>
+    <div style="font-weight:800;font-size:13px;color:var(--gold);margin-bottom:6px">PART A · 계수 (전:후 순서)</div>
+    <div class="keygrid">
+      <div class="k"><span class="n">1</span><span class="a">2 H<sub>2</sub> + 1 O<sub>2</sub> → 2 H<sub>2</sub>O &nbsp;<b>(2·1·2)</b></span></div>
+      <div class="k"><span class="n">2</span><span class="a">1 C + 1 O<sub>2</sub> → 1 CO<sub>2</sub> &nbsp;<b>(1·1·1)</b></span></div>
+      <div class="k"><span class="n">3</span><span class="a">2 Mg + 1 O<sub>2</sub> → 2 MgO &nbsp;<b>(2·1·2)</b></span></div>
+      <div class="k"><span class="n">4</span><span class="a">2 CO + 1 O<sub>2</sub> → 2 CO<sub>2</sub> &nbsp;<b>(2·1·2)</b></span></div>
+      <div class="k"><span class="n">5</span><span class="a">1 N<sub>2</sub> + 3 H<sub>2</sub> → 2 NH<sub>3</sub> &nbsp;<b>(1·3·2)</b></span></div>
+      <div class="k"><span class="n">6</span><span class="a">1 CH<sub>4</sub> + 2 O<sub>2</sub> → 1 CO<sub>2</sub> + 2 H<sub>2</sub>O &nbsp;<b>(1·2·1·2)</b></span></div>
+      <div class="k"><span class="n">7</span><span class="a">2 Na + 2 H<sub>2</sub>O → 2 NaOH + 1 H<sub>2</sub> &nbsp;<b>(2·2·2·1)</b></span></div>
+      <div class="k"><span class="n">8</span><span class="a">4 Fe + 3 O<sub>2</sub> → 2 Fe<sub>2</sub>O<sub>3</sub> &nbsp;<b>(4·3·2)</b></span></div>
+      <div class="k"><span class="n">9</span><span class="a">2 H<sub>2</sub>O<sub>2</sub> → 2 H<sub>2</sub>O + 1 O<sub>2</sub> &nbsp;<b>(2·2·1)</b></span></div>
+      <div class="k"><span class="n">10</span><span class="a">1 HCl + 1 NaOH → 1 NaCl + 1 H<sub>2</sub>O &nbsp;<b>(1·1·1·1)</b></span></div>
+    </div>
+    <div style="font-weight:800;font-size:13px;color:var(--gold);margin:14px 0 6px">PART B · 개념</div>
+    <div class="keygrid">
+      <div class="k"><span class="n">1</span><span class="a">②</span></div>
+      <div class="k"><span class="n">2</span><span class="a">①·②·④ (색은 변할 수 있음)</span></div>
+      <div class="k"><span class="n">3</span><span class="a">②</span></div>
+      <div class="k"><span class="n">4</span><span class="a">②</span></div>
+      <div class="k"><span class="n">5</span><span class="a">중화</span></div>
+      <div class="k"><span class="n">6</span><span class="a">①</span></div>
+      <div class="k"><span class="n">7</span><span class="a">앙금(침전)</span></div>
+      <div class="k"><span class="n">8</span><span class="a">②</span></div>
+      <div class="k"><span class="n">9</span><span class="a">③</span></div>
+      <div class="k"><span class="n">10</span><span class="a">수소 (H<sub>2</sub>)</span></div>
+    </div>
+
+    <div class="stat">
+      <b>채점 · 통계 기록</b> — 각 문항 1점, 총 20점. Part A는 계수 전체가 맞아야 정답 처리. 같은 학생에게 <b>게임 전(PRE)·후(POST)</b> 동일 문항으로 실시해 향상도를 측정하세요.
+      <table>
+        <tr><th>구분</th><th>Part A (계수)</th><th>Part B (개념)</th><th>총점 / 20</th><th>정답률</th></tr>
+        <tr><td>사전 평균</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>사후 평균</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>향상도(Δ)</td><td></td><td></td><td></td><td></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">케미컬 퀘스트 — 수브레인 : 데모크리토스 · 중학교 2학년 화학 학습 평가지</div>
+</div>

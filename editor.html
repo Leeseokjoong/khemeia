@@ -1,0 +1,226 @@
+<meta charset="utf-8">
+<title>케미컬 퀘스트 — 화면 배치 편집기</title>
+<style>
+  :root{--hi:#ffd34e;--dim:#9a92b8;--line:#2a2344;--panel:#141024}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0a0812;color:#e8e2ff;
+    font-family:"Gowun Batang","Malgun Gothic",serif}
+  .wrap{display:flex;height:100%;gap:10px;padding:10px}
+  /* ⚠ iframe 을 그냥 100% 로 두면 게임이 '좁은 화면'으로 렌더링돼 실제와 다른 배치가 나온다.
+     실제 해상도(예: 1920×1080)로 렌더링한 뒤 transform 으로 축소해 보여준다. */
+  .stage{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    background:#000;position:relative;display:flex;align-items:center;justify-content:center}
+  .stage iframe{border:0;display:block;transform-origin:top left;position:absolute;left:0;top:0}
+  .zoomTag{position:absolute;right:8px;bottom:8px;z-index:5;font-size:12px;color:var(--dim);
+    background:rgba(10,8,20,.85);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .side{width:390px;flex:none;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+  .card{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px}
+  h1{font-size:17px;margin:0 0 4px;color:var(--hi);letter-spacing:1px}
+  .sub{font-size:12px;color:var(--dim);line-height:1.6;margin:0 0 8px}
+  button{font-family:inherit;font-size:13px;padding:7px 11px;border-radius:8px;cursor:pointer;
+    background:#221c3a;color:#e8e2ff;border:1px solid #443c66}
+  button:hover{border-color:var(--hi)}
+  button.pri{background:linear-gradient(135deg,#b14dff,#ff5db1);border:none;color:#fff;font-weight:700}
+  .row{display:flex;gap:6px;flex-wrap:wrap}
+  .items{display:flex;flex-direction:column;gap:5px;max-height:290px;overflow-y:auto}
+  .it{display:flex;align-items:center;gap:6px;font-size:12px;
+    border:1px solid #2a2344;border-radius:7px;padding:5px 7px;background:rgba(0,0,0,.25)}
+  .it b{flex:1;font-weight:400}
+  .it input{width:46px;background:#0d0b18;color:#e8e2ff;border:1px solid #443c66;
+    border-radius:5px;padding:3px 4px;font-family:ui-monospace,monospace;font-size:11.5px}
+  .it .u{color:#6a6088;font-size:11px;white-space:nowrap}
+  .it .zb{padding:1px 5px;font-size:11px;border-radius:5px;line-height:1.4}
+  .it.moved{border-color:var(--hi)}
+  textarea{width:100%;height:190px;background:#0d0b18;color:#bff0d0;border:1px solid #443c66;
+    border-radius:8px;padding:8px;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.5}
+  .note{font-size:11.5px;color:var(--dim);line-height:1.6}
+  .ok{color:#8ef0b8}.warn{color:#ff9a4e}
+</style>
+
+<div class="wrap">
+  <div class="stage" id="stage"><iframe id="fr"></iframe><span class="zoomTag" id="zoomTag"></span></div>
+
+  <div class="side">
+    <div class="card">
+      <h1>🔧 화면 배치 편집기</h1>
+      <p class="sub">왼쪽 게임 화면에서 요소를 <b>직접 끌어</b> 옮깁니다.
+        위치는 부모 대비 %로 저장돼 창 크기가 바뀌어도 유지됩니다.</p>
+      <div class="row">
+        <button class="pri" id="edit">✋ 배치 모드 켜기</button>
+        <button id="demo">⚔ 전투 화면</button>
+        <button id="reset">↺ 기본값</button>
+      </div>
+      <div class="row" style="margin-top:6px;align-items:center">
+        <span class="sub" style="margin:0">해상도</span>
+        <select id="res" style="background:#0d0b18;color:#e8e2ff;border:1px solid #443c66;
+          border-radius:6px;padding:5px 7px;font-family:inherit;font-size:13px">
+          <option value="1920x1080">1920 × 1080</option>
+          <option value="2560x1440">2560 × 1440</option>
+          <option value="1600x900">1600 × 900</option>
+          <option value="1366x768">1366 × 768 (노트북)</option>
+        </select>
+      </div>
+      <p class="sub" id="status" style="margin:8px 0 0"></p>
+    </div>
+
+    <div class="card">
+      <h1 style="font-size:14px">요소 목록</h1>
+      <p class="sub">숫자를 직접 입력해 미세 조정할 수도 있습니다 (%).</p>
+      <div class="items" id="items"></div>
+    </div>
+
+    <div class="card">
+      <h1 style="font-size:14px">📋 내보내기</h1>
+      <p class="sub">이 내용을 그대로 복사해 전달하면 기본 배치로 반영됩니다.</p>
+      <div class="row" style="margin-bottom:6px">
+        <button id="copy">복사</button>
+        <button id="refresh">새로고침</button>
+      </div>
+      <textarea id="out" readonly></textarea>
+      <p class="note" style="margin-top:6px">
+        ⚠ 편집기와 게임은 <b>같은 저장소</b>를 씁니다 — 여기서 바꾼 배치가 게임에도 그대로 적용됩니다.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+const fr=document.getElementById('fr');
+const $=s=>document.querySelector(s);
+let W=null, D=null;                 // iframe window / document
+let editing=false;
+
+// iframe 을 '진짜 해상도'로 렌더링하고 화면에 맞게 축소한다.
+// 이렇게 해야 게임 안의 미디어쿼리(1400px+ 확대 등)가 실제와 똑같이 걸린다.
+function fitStage(){
+  const [w,h]=$('#res').value.split('x').map(Number);
+  const st=$('#stage'), sr=st.getBoundingClientRect();
+  const k=Math.min(sr.width/w, sr.height/h);
+  fr.style.width=w+'px'; fr.style.height=h+'px';
+  fr.style.transform=`scale(${k})`;
+  // 축소된 결과를 가운데로
+  fr.style.left=Math.max(0,(sr.width-w*k)/2)+'px';
+  fr.style.top =Math.max(0,(sr.height-h*k)/2)+'px';
+  $('#zoomTag').textContent=`${w}×${h} · ${Math.round(k*100)}%`;
+}
+addEventListener('resize', fitStage);
+$('#res').onchange=fitStage;
+
+// 배포본은 index.html, 로컬 개발은 game.html — 있는 쪽을 자동으로 문다
+(async function pickSrc(){
+  for(const cand of ['index.html','game.html']){
+    try{
+      const r=await fetch(cand,{method:'HEAD'});
+      if(r.ok){ fr.src=cand; return; }
+    }catch(e){}
+  }
+  fr.src='index.html';
+})();
+
+function status(msg,cls){ $('#status').innerHTML=`<span class="${cls||''}">${msg}</span>`; }
+
+fr.addEventListener('load',()=>{
+  fitStage();
+  try{
+    W=fr.contentWindow; D=fr.contentDocument;
+    if(!W.LAYOUT_ITEMS){ status('게임에 배치 기능이 없습니다. index.html 을 최신으로 배포하세요.','warn'); return; }
+    // 게임 안의 편집 바는 편집기에선 숨긴다 — 조작은 오른쪽 패널로 하고,
+    // 바가 화면 아래를 덮어 그 자리 요소를 못 잡는 문제도 있었다.
+    const st=D.createElement('style');
+    st.textContent='.layBar{display:none !important}';
+    D.head.appendChild(st);
+    status('준비됨 — <b>전투 화면</b>을 먼저 띄우면 모든 요소가 보입니다.','ok');
+    renderItems();
+    dump();
+  }catch(e){ status('iframe 접근 실패: '+e.message+' (같은 도메인에서 열어야 합니다)','warn'); }
+});
+
+// 전투 화면을 띄워 모든 요소가 화면에 나오게 한다 (편집 대상이 다 보여야 배치할 수 있다)
+$('#demo').onclick=()=>{
+  if(!W) return;
+  try{
+    const intro=D.querySelector('#introScreen');
+    if(intro){ intro.style.display='none'; intro.classList.remove('show'); }
+    ['worldScreen','mapScreen','codexScreen','shopScreen','gearScreen','labScreen',
+     'sepScreen','cutScreen','loading','overlay','briefScreen']
+      .forEach(id=>{const e=D.querySelector('#'+id); if(e)e.classList.remove('show');});
+    W.buildMap(0); W.state.map.row=0; W.startBattle(W.BOSSES[0]);
+    W.state.known=new Set(['H2O','CO2','CH4']);
+    W.state.inv={H:4,O:4,C:3}; W.drawHand(); W.render();
+    W.log('배치 편집용 데모 전투'); W.showEtherHint(true);
+    status('전투 화면 준비됨. <b>배치 모드</b>를 켜고 끌어 옮기세요.','ok');
+  }catch(e){ status('전투 화면 실패: '+e.message,'warn'); }
+};
+
+$('#edit').onclick=()=>{
+  if(!W) return;
+  editing=!editing;
+  W.layToggle(editing);
+  $('#edit').textContent = editing ? '✔ 배치 모드 끄기' : '✋ 배치 모드 켜기';
+  status(editing?'요소를 끌어 옮기세요. 놓으면 자동 저장됩니다.':'배치 모드를 껐습니다.','ok');
+  if(!editing){ renderItems(); dump(); }
+};
+
+$('#reset').onclick=()=>{
+  if(!W) return;
+  W.layout={}; W.saveLayout(); W.applyLayout();
+  renderItems(); dump(); status('기본 배치로 되돌렸습니다.','ok');
+};
+
+$('#refresh').onclick=()=>{ renderItems(); dump(); };
+
+function renderItems(){
+  if(!W) return;
+  const box=$('#items'); box.innerHTML='';
+  W.LAYOUT_ITEMS.forEach(it=>{
+    const v=W.layout[it.sel];
+    const d=document.createElement('div');
+    d.className='it'+(v?' moved':'');
+    const n=(k)=>v&&v[k]!=null?(+v[k]).toFixed(1):'';
+    const z=(v&&v.z!=null)?v.z:(it.z||10);
+    d.innerHTML=`<b>${it.name}</b>
+      <span class="u">X</span><input data-sel="${it.sel}" data-k="x" value="${n('x')}" placeholder="—">
+      <span class="u">Y</span><input data-sel="${it.sel}" data-k="y" value="${n('y')}" placeholder="—">
+      <span class="u">W</span><input data-sel="${it.sel}" data-k="w" value="${n('w')}" placeholder="—">
+      <span class="u">H</span><input data-sel="${it.sel}" data-k="h" value="${n('h')}" placeholder="—">
+      <span class="u" title="겹칠 때 앞뒤 순서">層${z}</span>
+      <button class="zb" data-sel="${it.sel}" data-d="1" title="앞으로">▲</button>
+      <button class="zb" data-sel="${it.sel}" data-d="-1" title="뒤로">▼</button>`;
+    box.appendChild(d);
+  });
+  // 앞뒤 순서 — 겹쳐서 안 보일 때 이걸로 올리고 내린다
+  box.querySelectorAll('.zb').forEach(b=>b.onclick=()=>{
+    const sel=b.dataset.sel, d=+b.dataset.d;
+    const it=W.LAYOUT_ITEMS.find(i=>i.sel===sel);
+    const v=W.layout[sel]; if(!v){ status('먼저 그 요소를 한 번 옮겨야 순서를 바꿀 수 있습니다.','warn'); return; }
+    v.z=(v.z!=null?v.z:(it.z||10))+d;
+    W.saveLayout(); W.applyLayout(); renderItems(); dump();
+  });
+  box.querySelectorAll('input').forEach(inp=>inp.onchange=()=>{
+    const sel=inp.dataset.sel, k=inp.dataset.k, val=parseFloat(inp.value);
+    if(isNaN(val)){ delete W.layout[sel]; }
+    else { W.layout[sel]=W.layout[sel]||{x:0,y:0}; W.layout[sel][k]=val; }
+    W.saveLayout(); W.applyLayout(); renderItems(); dump();
+  });
+}
+
+// 게임 코드에 그대로 박을 수 있는 형태로 뽑는다
+function dump(){
+  if(!W){ $('#out').value=''; return; }
+  const L=W.layout||{};
+  const keys=Object.keys(L);
+  if(!keys.length){ $('#out').value='(옮긴 요소 없음 — 기본 배치)'; return; }
+  const lines=keys.map(k=>{
+    const it=W.LAYOUT_ITEMS.find(i=>i.sel===k), v=L[k];
+    const parts=['x','y','w','h'].filter(p=>v[p]!=null).map(p=>`${p}:${(+v[p]).toFixed(2)}`);
+    if(v.z!=null) parts.push('z:'+v.z);
+    return `  '${k}': {${parts.join(', ')}},   // ${it?it.name:''}`;
+  });
+  $('#out').value='const LAYOUT_DEFAULT = {\n'+lines.join('\n')+'\n};';
+}
+
+$('#copy').onclick=async()=>{
+  try{ await navigator.clipboard.writeText($('#out').value); status('복사했습니다.','ok'); }
+  catch(e){ $('#out').select(); status('Ctrl+C 로 복사하세요.','warn'); }
+};
+</script>

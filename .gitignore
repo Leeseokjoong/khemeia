@@ -1,0 +1,24 @@
+# ── 원본 소재 — 최종 에셋만 저장소에 둔다 (assets/ 에 있음)
+assets/_source/
+assets/_unused/
+assets/wire/
+assets/fx/_frames/
+raw_card/
+raw_rare/
+raw_rare2/
+raw_sfx/
+raw_ui/
+raw/
+
+# ── 배포 사본 (assets 중복). GitHub Pages 는 루트에서 바로 서빙한다
+dist/
+
+# ── 로컬/임시
+.claude/
+.firebase/
+_촬영순서표_print.html
+_세이브백업_*.json
+_세이브복구.js
+*.log
+Thumbs.db
+desktop.ini

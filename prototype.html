@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>케미컬 퀘스트 — 챕터1 프로토타입</title>
+<style>
+  :root{
+    --bg:#12101a; --panel:#1e1b2e; --panel2:#272338; --ink:#e8e6f0;
+    --dim:#9a94b8; --line:#443c66; --good:#5ee8a0; --bad:#ff5d6c;
+    --fire:#ff7a2f; --water:#4ea8ff; --carbon:#7d7d8a; --hi:#ffd34e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:
+      radial-gradient(900px 500px at 50% -10%, #2a1f3a 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"DungGeunMo","Galmuri11",ui-monospace,"Courier New",monospace;
+    display:flex;align-items:center;justify-content:center;
+    padding:14px;
+    image-rendering:pixelated;
+    -webkit-font-smoothing:none;
+  }
+  .game{
+    width:min(920px,100%);
+    border:3px solid var(--line);
+    border-radius:6px;
+    background:var(--panel);
+    box-shadow:0 0 0 3px #0d0b14, 0 18px 40px rgba(0,0,0,.55);
+    overflow:hidden;
+  }
+  /* ---- top bar ---- */
+  .top{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;background:#161327;border-bottom:3px solid var(--line);
+    font-size:12px;letter-spacing:.5px;
+  }
+  .top b{color:var(--hi)}
+  .turnpill{background:#0d0b14;border:2px solid var(--line);border-radius:4px;padding:2px 8px}
+
+  /* ---- battlefield ---- */
+  .field{position:relative;height:230px;overflow:hidden;
+    background:
+      linear-gradient(180deg,#241a2e 0%, #1a1424 55%, #14101c 100%);
+    border-bottom:3px solid var(--line);}
+  .heathaze{position:absolute;inset:0;pointer-events:none;opacity:.0;transition:opacity .4s;
+    background:repeating-linear-gradient(0deg,rgba(255,90,20,.10) 0 3px,transparent 3px 8px);}
+  .wetlayer{position:absolute;left:0;right:0;bottom:0;height:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(78,168,255,.0),rgba(78,168,255,.28));
+    transition:height .4s;}
+  .actor{position:absolute;bottom:26px;text-align:center;transition:transform .12s}
+  .hero{left:60px}
+  .boss{right:60px}
+  .sprite{font-size:64px;line-height:1;filter:drop-shadow(0 4px 0 rgba(0,0,0,.5))}
+  .boss .sprite{font-size:78px}
+  .nameTag{margin-top:6px;font-size:11px;color:var(--dim)}
+  .hpwrap{width:150px;margin:4px auto 0;background:#0d0b14;border:2px solid var(--line);
+    border-radius:3px;height:12px;position:relative;overflow:hidden}
+  .hpfill{height:100%;background:linear-gradient(90deg,#3ddc84,#1fae60);transition:width .35s}
+  .boss .hpfill{background:linear-gradient(90deg,#ff7a2f,#e8452f)}
+  .hpnum{position:absolute;inset:0;font-size:9px;line-height:12px;text-align:center;color:#fff;
+    text-shadow:0 1px 0 #000}
+  .fx{position:absolute;font-size:30px;pointer-events:none;opacity:0}
+  .statusRow{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:center;gap:8px;
+    font-size:11px;color:var(--dim)}
+  .badge{background:#0d0b14;border:2px solid var(--line);border-radius:10px;padding:1px 8px}
+  .badge.hot{color:var(--fire);border-color:#5a2a1a}
+  .badge.cold{color:var(--water);border-color:#1a3a5a}
+  .floatDmg{position:absolute;font-size:20px;font-weight:bold;pointer-events:none;
+    text-shadow:0 2px 0 #000;opacity:0}
+
+  /* ---- console log ---- */
+  .log{height:92px;overflow-y:auto;padding:8px 12px;font-size:12px;line-height:1.55;
+    background:#14111f;border-bottom:3px solid var(--line);color:#cfc9e6}
+  .log .u{color:var(--water)} .log .b{color:var(--fire)} .log .g{color:var(--good)}
+  .log .y{color:var(--hi)} .log .r{color:var(--bad)}
+
+  /* ---- bottom: inventory + synth ---- */
+  .bottom{display:grid;grid-template-columns:1.1fr 1fr;gap:0}
+  .panelBox{padding:10px 12px}
+  .panelBox.left{border-right:3px solid var(--line)}
+  .h{font-size:11px;color:var(--dim);letter-spacing:1px;margin:0 0 8px}
+  .atoms{display:flex;flex-wrap:wrap;gap:6px}
+  .atom{cursor:pointer;user-select:none;min-width:44px;text-align:center;
+    border:2px solid var(--line);border-radius:5px;background:var(--panel2);
+    padding:5px 4px;transition:transform .08s}
+  .atom:hover{transform:translateY(-2px);border-color:var(--hi)}
+  .atom:active{transform:translateY(0)}
+  .atom .sym{font-size:16px;font-weight:bold}
+  .atom .ct{font-size:10px;color:var(--dim)}
+  .atom.H .sym{color:#dfe6ff}.atom.O .sym{color:#ff8f6b}.atom.C .sym{color:#b9b9c8}
+  .atom.disabled{opacity:.3;pointer-events:none}
+
+  .tray{min-height:44px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+    border:2px dashed var(--line);border-radius:5px;padding:6px;margin-bottom:8px;background:#171426}
+  .tray .chip{background:#2a2540;border:2px solid var(--line);border-radius:4px;
+    padding:3px 7px;font-size:13px;cursor:pointer}
+  .tray .chip:hover{border-color:var(--bad)}
+  .trayEmpty{color:var(--dim);font-size:11px;padding:4px}
+  .result{font-size:13px;margin:4px 0 8px;min-height:18px}
+  .result .ok{color:var(--good)} .result .no{color:var(--dim)}
+  .btns{display:flex;gap:6px;flex-wrap:wrap}
+  button.act{font-family:inherit;cursor:pointer;font-size:12px;color:var(--ink);
+    background:var(--panel2);border:2px solid var(--line);border-radius:5px;padding:7px 10px;
+    transition:transform .08s}
+  button.act:hover:not(:disabled){transform:translateY(-2px);border-color:var(--hi)}
+  button.act:disabled{opacity:.35;cursor:not-allowed}
+  button.fire{border-color:#3a6ea5;color:#bfe0ff}
+  button.fire:not(:disabled):hover{border-color:var(--water)}
+
+  .actionsBar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px;
+    border-top:3px solid var(--line);background:#161327}
+  .hint{font-size:11px;color:var(--dim);padding:0 12px 10px;background:#161327}
+  .codex{font-size:11px;color:var(--dim);padding:6px 12px;background:#14111f;border-top:3px solid var(--line)}
+  .codex b{color:var(--hi)}
+  .known{color:var(--good)}
+
+  /* overlay */
+  .overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(8,6,14,.86);z-index:20;text-align:center}
+  .overlay.show{display:flex}
+  .card{border:3px solid var(--line);background:var(--panel);border-radius:6px;padding:24px 30px;
+    box-shadow:0 0 0 3px #0d0b14}
+  .card h2{margin:0 0 8px;font-size:20px}
+  .card p{color:var(--dim);font-size:13px;margin:6px 0 16px}
+  .wrap{position:relative}
+  kbd{background:#0d0b14;border:1px solid var(--line);border-radius:3px;padding:0 4px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="game wrap">
+  <div class="top">
+    <div>CHAPTER 1 — <b>물질의 상태</b></div>
+    <div>화염 정령 <b>이그니스</b> 战</div>
+    <div class="turnpill">TURN <span id="turnNo">1</span></div>
+  </div>
+
+  <div class="field" id="field">
+    <div class="heathaze" id="haze"></div>
+    <div class="wetlayer" id="wet"></div>
+    <div class="statusRow">
+      <span class="badge" id="tempBadge">🌡 온도 50</span>
+      <span class="badge" id="bossStatus">이그니스: 정상</span>
+    </div>
+
+    <div class="actor hero">
+      <div class="sprite">🧙</div>
+      <div class="nameTag">연금술사</div>
+      <div class="hpwrap"><div class="hpfill" id="heroHp" style="width:100%"></div>
+        <div class="hpnum" id="heroHpNum">100 / 100</div></div>
+    </div>
+
+    <div class="actor boss">
+      <div class="sprite" id="bossSprite">🔥</div>
+      <div class="nameTag">이그니스</div>
+      <div class="hpwrap"><div class="hpfill" id="bossHp" style="width:100%"></div>
+        <div class="hpnum" id="bossHpNum">120 / 120</div></div>
+    </div>
+
+    <div class="fx" id="fx">💥</div>
+    <div class="floatDmg" id="floatDmg"></div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <div class="bottom">
+    <div class="panelBox left">
+      <p class="h">보유 원소 — 클릭해서 조합창에 추가</p>
+      <div class="atoms" id="atoms"></div>
+      <div class="codex" style="margin-top:10px;padding:8px 0 0;border:none;background:none">
+        발견한 반응식: <span id="codexList" class="none">아직 없음</span>
+      </div>
+    </div>
+
+    <div class="panelBox">
+      <p class="h">반응식 조립</p>
+      <div class="tray" id="tray"><span class="trayEmpty">원소를 클릭해 넣으세요…</span></div>
+      <div class="result" id="result"><span class="no">조합 대기 중</span></div>
+      <div class="btns">
+        <button class="act fire" id="fireBtn" disabled>⚡ 합성 &amp; 발사</button>
+        <button class="act" id="clearBtn">비우기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actionsBar">
+    <button class="act" data-mine="H">⛏ H 채집 (+2)</button>
+    <button class="act" data-mine="O">⛏ O 채집 (+2)</button>
+    <button class="act" data-mine="C">⛏ C 채집 (+2)</button>
+    <button class="act" id="defendBtn">🛡 방어 (온도 -15)</button>
+  </div>
+  <div class="hint" id="hint">
+    💡 이그니스는 <span style="color:var(--water)">물(H₂O)</span>에 약합니다. 하지만 <b>온도가 높을수록 물 스킬 위력이 줄어듭니다</b> — 방어나 물로 먼저 온도를 낮추세요. CO₂로 <b>질식(소화)</b>시켜 보스 공격을 약화시킬 수도 있습니다.
+  </div>
+
+  <!-- result overlay -->
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h2 id="ovTitle">승리!</h2>
+      <p id="ovText"></p>
+      <button class="act" id="restartBtn">다시 시작</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   케미컬 퀘스트 — 챕터1 프로토타입
+   목적 검증: "원소 수집 → 반응식 조립 → 합성 발사"가 재밌는가
+   ============================================================ */
+
+// ---- 반응식 정의: 원자 구성(atoms)만으로 판정 ----
+const RECIPES = [
+  { key:'H2O',  name:'물 H₂O',      atoms:{H:2,O:1}, color:'#4ea8ff', kind:'water' },
+  { key:'CO2',  name:'이산화탄소 CO₂', atoms:{C:1,O:2}, color:'#9ad', kind:'co2' },
+  { key:'O2',   name:'산소 O₂',      atoms:{O:2},     color:'#ff8f6b', kind:'o2' },
+  { key:'H2',   name:'수소 H₂',      atoms:{H:2},     color:'#dfe6ff', kind:'h2' },
+  { key:'CO',   name:'일산화탄소 CO', atoms:{C:1,O:1}, color:'#c98', kind:'co' },
+];
+
+const state = {
+  turn:1,
+  heroHp:100, heroMax:100,
+  bossHp:120, bossMax:120,
+  temp:50,           // 0 냉 ~ 100 열
+  wet:false,
+  boss:{ suffocate:0 },   // 소화(질식) 남은 턴
+  inv:{ H:2, O:1, C:0 },  // 시작 원소
+  tray:[],           // 조합창에 담긴 원소 심볼 배열
+  known:new Set(),   // 발견한 반응식 key
+  busy:false, over:false,
+};
+
+// ---- DOM ----
+const $ = s=>document.querySelector(s);
+const logEl=$('#log'), atomsEl=$('#atoms'), trayEl=$('#tray'), resultEl=$('#result');
+const fireBtn=$('#fireBtn');
+
+function log(html){ const d=document.createElement('div'); d.innerHTML=html; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; }
+
+// ---- 렌더 ----
+function render(){
+  $('#turnNo').textContent=state.turn;
+  // hp
+  $('#heroHp').style.width=(state.heroHp/state.heroMax*100)+'%';
+  $('#heroHpNum').textContent=`${Math.max(0,state.heroHp)} / ${state.heroMax}`;
+  $('#bossHp').style.width=(state.bossHp/state.bossMax*100)+'%';
+  $('#bossHpNum').textContent=`${Math.max(0,state.bossHp)} / ${state.bossMax}`;
+  // temp badge
+  const tb=$('#tempBadge');
+  tb.textContent=`🌡 온도 ${state.temp}`;
+  tb.className='badge '+(state.temp>=70?'hot':state.temp<=30?'cold':'');
+  // haze / wet
+  $('#haze').style.opacity = Math.max(0,(state.temp-50)/50*0.9);
+  $('#wet').style.height = state.wet? '40px':'0px';
+  // boss status
+  const bs=$('#bossStatus');
+  bs.textContent = '이그니스: ' + (state.boss.suffocate>0? `질식(${state.boss.suffocate})` : state.wet? '젖음':'정상');
+  $('#bossSprite').textContent = state.boss.suffocate>0? '💨' : '🔥';
+  // inventory
+  atomsEl.innerHTML='';
+  ['H','O','C'].forEach(sym=>{
+    const b=document.createElement('div');
+    b.className='atom '+sym+(state.inv[sym]<=0?' disabled':'');
+    b.innerHTML=`<div class="sym">${sym}</div><div class="ct">×${state.inv[sym]}</div>`;
+    b.onclick=()=>addToTray(sym);
+    atomsEl.appendChild(b);
+  });
+  // tray
+  if(state.tray.length===0){ trayEl.innerHTML='<span class="trayEmpty">원소를 클릭해 넣으세요…</span>'; }
+  else{
+    trayEl.innerHTML='';
+    state.tray.forEach((sym,i)=>{
+      const c=document.createElement('span'); c.className='chip'; c.textContent=sym;
+      c.title='클릭해서 되돌리기'; c.onclick=()=>removeFromTray(i);
+      trayEl.appendChild(c);
+    });
+  }
+  // match
+  const m=matchRecipe();
+  if(state.tray.length===0){ resultEl.innerHTML='<span class="no">조합 대기 중</span>'; fireBtn.disabled=true; }
+  else if(m){ resultEl.innerHTML=`<span class="ok">✔ ${m.name} 완성! 발사 준비됨</span>`; fireBtn.disabled=false; }
+  else { resultEl.innerHTML=`<span class="no">${formula(state.tray)} — 알 수 없는 조합</span>`; fireBtn.disabled=true; }
+  // codex
+  const list=[...state.known];
+  $('#codexList').innerHTML = list.length? list.map(k=>{
+    const r=RECIPES.find(x=>x.key===k); return `<span class="known">${r.name}</span>`;
+  }).join(', ') : '아직 없음';
+  // disable actions while busy/over
+  document.querySelectorAll('[data-mine], #defendBtn').forEach(b=>b.disabled=state.busy||state.over);
+  if(state.busy||state.over) fireBtn.disabled=true;
+}
+
+function formula(tray){
+  const c={}; tray.forEach(s=>c[s]=(c[s]||0)+1);
+  return Object.entries(c).map(([s,n])=>n>1?s+n:s).join('');
+}
+function countTray(){ const c={}; state.tray.forEach(s=>c[s]=(c[s]||0)+1); return c; }
+function matchRecipe(){
+  const c=countTray();
+  return RECIPES.find(r=>{
+    const keys=new Set([...Object.keys(r.atoms),...Object.keys(c)]);
+    for(const k of keys){ if((r.atoms[k]||0)!==(c[k]||0)) return false; }
+    return true;
+  })||null;
+}
+
+// ---- 조합창 조작 ----
+function addToTray(sym){
+  if(state.busy||state.over) return;
+  const used=state.tray.filter(s=>s===sym).length;
+  if(used>=state.inv[sym]) return; // 보유량 초과 불가
+  state.tray.push(sym); render();
+}
+function removeFromTray(i){ if(state.busy||state.over)return; state.tray.splice(i,1); render(); }
+$('#clearBtn').onclick=()=>{ state.tray=[]; render(); };
+
+// ---- 애니메이션 헬퍼 ----
+function shake(sel){ const el=$(sel); el.style.transform='translateX(-6px)';
+  setTimeout(()=>el.style.transform='translateX(6px)',60);
+  setTimeout(()=>el.style.transform='',120); }
+function floatText(txt,color,atBoss=true){
+  const el=$('#floatDmg'); el.textContent=txt; el.style.color=color;
+  el.style.left=atBoss?'70%':'18%'; el.style.bottom='120px'; el.style.opacity='1';
+  el.style.transition='none'; el.style.transform='translateY(0)';
+  requestAnimationFrame(()=>{ el.style.transition='all .9s ease-out';
+    el.style.transform='translateY(-40px)'; el.style.opacity='0'; });
+}
+function burst(emoji,color,atBoss=true){
+  const el=$('#fx'); el.textContent=emoji; el.style.color=color||'';
+  el.style.left=atBoss?'66%':'14%'; el.style.bottom='90px'; el.style.opacity='1';
+  el.style.transition='none'; el.style.transform='scale(.4)';
+  requestAnimationFrame(()=>{ el.style.transition='all .5s'; el.style.transform='scale(1.6)'; el.style.opacity='0'; });
+}
+
+// ---- 발사 ----
+fireBtn.onclick=()=>{
+  const r=matchRecipe(); if(!r||state.busy||state.over) return;
+  // 원소 소모
+  for(const [s,n] of Object.entries(r.atoms)) state.inv[s]-=n;
+  const firstTime=!state.known.has(r.key);
+  state.known.add(r.key);
+  state.tray=[];
+  state.busy=true; render();
+
+  if(firstTime) log(`<span class="y">✦ 새 반응식 발견: ${r.name}!</span> 도감에 등록되었습니다.`);
+
+  applyEffect(r);
+  render();
+
+  setTimeout(()=>{
+    if(checkEnd()) return;
+    bossTurn();
+  }, 700);
+};
+
+function applyEffect(r){
+  switch(r.kind){
+    case 'water':{
+      // 위력은 온도가 높을수록 감소
+      const factor = 1 - state.temp/200;          // temp50→0.75, temp100→0.5, temp0→1
+      const dmg = Math.round(46*factor);
+      state.bossHp-=dmg; state.temp=Math.max(0,state.temp-30); state.wet=true;
+      burst('💧','#4ea8ff'); floatText('-'+dmg,'#7cc4ff'); shake('.boss');
+      log(`<span class="u">물 H₂O 발사!</span> 화염 정령에게 <b>${dmg}</b> 피해. 온도 -30, 젖음 부여.`);
+      if(state.temp>60) log(`<span class="r">온도가 높아 증발</span> — 위력이 감소했습니다. 먼저 식히세요!`);
+      break;
+    }
+    case 'co2':{
+      const dmg=14; state.bossHp-=dmg; state.boss.suffocate=2;
+      burst('🫧','#9ad'); floatText('-'+dmg,'#bcd'); shake('.boss');
+      log(`<span class="u">이산화탄소 CO₂ 살포!</span> ${dmg} 피해 + <b>질식(소화)</b> 2턴 — 보스 공격이 약해집니다.`);
+      break;
+    }
+    case 'o2':{
+      state.temp=Math.min(100,state.temp+10);
+      burst('🌀','#ff8f6b');
+      log(`산소 O₂ 방출. 전장의 온도가 살짝 올랐습니다 (연소 촉진). <span class="r">불 보스에겐 역효과!</span>`);
+      break;
+    }
+    case 'h2':{
+      // 젖은 상태에서 수소는 위험… 여기선 약한 자원 낭비
+      burst('🎈','#dfe6ff');
+      log(`수소 H₂ 방출 — 가벼워서 흩어졌습니다. 큰 효과 없음 (자원 낭비).`);
+      break;
+    }
+    case 'co':{
+      state.heroHp-=6; burst('☠','#c98'); floatText('-6','#f88',false);
+      log(`<span class="r">일산화탄소 CO!</span> 독성으로 자신도 6 피해. 불완전연소는 위험합니다.`);
+      break;
+    }
+  }
+}
+
+// ---- 채집 / 방어 ----
+document.querySelectorAll('[data-mine]').forEach(b=>{
+  b.onclick=()=>{
+    if(state.busy||state.over) return;
+    const sym=b.dataset.mine; state.inv[sym]+=2;
+    log(`⛏ ${sym} 원소를 채집했습니다 (+2).`);
+    endPlayerAction();
+  };
+});
+$('#defendBtn').onclick=()=>{
+  if(state.busy||state.over)return;
+  state.temp=Math.max(0,state.temp-15); state._guard=true;
+  log(`🛡 방어 태세. 온도 -15, 이번 턴 받는 피해 절반.`);
+  endPlayerAction();
+};
+function endPlayerAction(){ state.busy=true; render(); setTimeout(()=>{ if(!checkEnd()) bossTurn(); },500); }
+
+// ---- 보스 턴 ----
+function bossTurn(){
+  const supp = state.boss.suffocate>0;         // 질식 시 약화
+  const roll=(state.turn*7+state.bossHp)%3;    // 의사난수 패턴(결정적)
+  let dmg, msg, addTemp=0, pat;
+  if(roll===0){ pat='화염 브레스'; dmg=18; addTemp=12; }
+  else if(roll===1){ pat='열파'; dmg=8; addTemp=22; }
+  else { pat='불꽃 채찍'; dmg=22; addTemp=6; }
+
+  if(supp){ dmg=Math.round(dmg*0.5); addTemp=Math.round(addTemp*0.4);
+    log(`<span class="b">이그니스의 ${pat}</span> — 하지만 <span class="g">질식으로 약화!</span>`); }
+  else log(`<span class="b">이그니스의 ${pat}!</span>`);
+
+  // 젖음이면 화염 피해 감소
+  if(state.wet){ dmg=Math.round(dmg*0.7); }
+  if(state._guard){ dmg=Math.round(dmg*0.5); }
+
+  state.heroHp-=dmg; state.temp=Math.min(100,state.temp+addTemp);
+  burst('🔥','#ff7a2f',false); floatText('-'+dmg,'#ff6b6b',false); shake('.hero');
+  log(`→ ${dmg} 피해를 입었습니다. 온도 +${addTemp}.`);
+
+  // 턴 종료 정리
+  if(state.boss.suffocate>0) state.boss.suffocate--;
+  if(state.wet && Math.random()<0.5) state.wet=false; // 젖음은 서서히 마름
+  state._guard=false;
+  state.turn++; state.busy=false;
+  render();
+  checkEnd();
+}
+
+// ---- 승패 ----
+function checkEnd(){
+  if(state.over) return true;
+  if(state.bossHp<=0){ endGame(true); return true; }
+  if(state.heroHp<=0){ endGame(false); return true; }
+  return false;
+}
+function endGame(win){
+  state.over=true; state.busy=true; render();
+  const ov=$('#overlay');
+  $('#ovTitle').textContent = win? '🏆 승리! 이그니스 격파' : '💀 패배…';
+  $('#ovText').innerHTML = win
+    ? `${state.turn}턴 만에 화염 정령을 물리쳤습니다!<br>발견한 반응식 ${state.known.size}개. 챕터2 「화합과 분해」가 기다립니다.`
+    : `쓰러졌습니다. 온도를 먼저 낮추고 물을 쏘거나, CO₂로 질식시켜 보세요.`;
+  setTimeout(()=>ov.classList.add('show'),400);
+}
+$('#restartBtn').onclick=()=>location.reload();
+
+// ---- 시작 ----
+log(`<span class="y">전투 시작!</span> 화염 정령 <span class="b">이그니스</span>가 나타났다.`);
+log(`시작 원소: H×2, O×1. <b>H를 하나 더 채집</b>해 H₂O(H+H+O)를 만들어 보세요.`);
+render();
+</script>
+</body>
+</html>
