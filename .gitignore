@@ -1,8 +1,8 @@
 # ── 원본 소재 — 최종 에셋만 저장소에 둔다 (assets/ 에 있음)
 assets/_source/
 assets/_unused/
-assets/wire/
 assets/fx/_frames/
+# assets/wire/ 는 제외하지 않는다 — 보스 배경 텍스처로 게임이 실제로 쓴다
 raw_card/
 raw_rare/
 raw_rare2/
