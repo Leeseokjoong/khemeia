@@ -41,3 +41,5 @@ assets/*/_old/
 assets/card/_old_*
 *.bak
 *.bak.*
+제출_NAN/
+제출_NAN_*.md
